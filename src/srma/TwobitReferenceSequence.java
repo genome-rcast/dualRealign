@@ -1,13 +1,14 @@
 package srma;
 
+import java.io.IOException;
+
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.reference.ReferenceSequenceFile;
-
-import java.io.IOException;
-
 import jp.ac.utokyo.rcast.karkinos.utils.TwoBitGenomeReader;
+
+
 
 public class TwobitReferenceSequence implements ReferenceSequenceFile {
 
