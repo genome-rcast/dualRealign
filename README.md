@@ -25,6 +25,8 @@ Especially, could be used for Tumor/Normal set of BAM files.
 
 # Run
 
+
+```
 command
 
 usage: dualRealign.jar realign -n <arg> -t <arg> -r <arg> -o <arg> [-ct <arg>]  [-nt <arg>]
