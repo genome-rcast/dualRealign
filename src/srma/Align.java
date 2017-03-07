@@ -868,7 +868,8 @@ public class Align {
 			rec.setCigar(cigar);
 			rec.setAlignmentStart(alignmentStart);
 			rec.setReadBases(readBases);
-			// rec.setBaseQualities(baseQualities);
+			rec.setBaseQualities(baseQualities);
+			
 
 			// Reset saved attributes
 			Align.resetAttributes(rec, optFieldTags, optFieldValues);
