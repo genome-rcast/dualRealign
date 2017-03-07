@@ -633,6 +633,14 @@ public class Align {
 						if (read.charAt(curAlignHeapNode.readOffset) != sequence
 								.getBases()[curAlignHeapNode.node.position - 1]) {
 							numEdits++;
+							
+//							System.out.println("mis"+read.charAt(curAlignHeapNode.readOffset) 
+//									+" " +(char)sequence
+//									.getBases()[curAlignHeapNode.node.position - 1] +" " +curAlignHeapNode.readOffset+ " " +(curAlignHeapNode.node.position - 1));
+						}else{
+//							System.out.println("mis"+read.charAt(curAlignHeapNode.readOffset) 
+//							+" " +(char)sequence
+//							.getBases()[curAlignHeapNode.node.position - 1] +" " +curAlignHeapNode.readOffset+ " " +(curAlignHeapNode.node.position - 1));
 						}
 						break;
 					case Node.INSERTION:
@@ -850,12 +858,14 @@ public class Align {
 
 		// Ueda add
 		int nummatchOrg = getmatch(rec);
+		Cigar cigar = new Cigar(cigarElements);
+		int nummatchAfter = (rec.getReadLength()-cliplen(cigar)) - (numEdits-indellen(cigar)); 
 
 		// ueda
-		if (nummatch >= nummatchOrg) {
+		if (nummatchAfter >= nummatchOrg) {
 
 			// Update SAM record
-			rec.setCigar(new Cigar(cigarElements));
+			rec.setCigar(cigar);
 			rec.setAlignmentStart(alignmentStart);
 			rec.setReadBases(readBases);
 			// rec.setBaseQualities(baseQualities);
@@ -891,15 +901,35 @@ public class Align {
 		
 		int len = rec.getReadLength();
 		int nm = rec.getIntegerAttribute("NM");
-		int indellen = indellen(rec);
+		int indellen = indellen(rec.getCigar());
+		int cliplen = cliplen(rec.getCigar());
 		
-		return len - (nm-indellen);
+		return (len-cliplen) - (nm-indellen);
 	}
 	
-	private static int indellen(SAMRecord sam) {
+	private static int cliplen(Cigar cigar) {
 
 		int len = 0;
-		for (CigarElement ce : sam.getCigar().getCigarElements()) {
+		for (CigarElement ce : cigar.getCigarElements()) {
+
+			if (ce.getOperator().equals(CigarOperator.S)) {
+				len = len + ce.getLength();
+			}
+			if (ce.getOperator().equals(CigarOperator.H)) {
+				len = len + ce.getLength();
+			}
+		
+			
+		}
+
+		return len;
+
+	}
+	
+	private static int indellen(Cigar cigar) {
+
+		int len = 0;
+		for (CigarElement ce : cigar.getCigarElements()) {
 
 			if (ce.getOperator().equals(CigarOperator.D)) {
 				len = len + ce.getLength();
@@ -907,6 +937,7 @@ public class Align {
 			if (ce.getOperator().equals(CigarOperator.I)) {
 				len = len + ce.getLength();
 			}
+		
 			
 		}
 

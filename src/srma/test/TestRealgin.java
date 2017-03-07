@@ -31,16 +31,17 @@ public class TestRealgin {
 		
 
 		
-		String normalbamf = "/data/users/yamamoto/TodaiPanel/bam/PLC-TK-3N_TDv3_genome.bam";
-		String tumorbamf = "/data/users/yamamoto/TodaiPanel/bam/PLC-TK-3TA_TDv3_genome.bam";
+
+		String normalbamf = "/home/spark/todaitoptest/testdata/LUAD-311N_0_2_4sort.bam";
+		String tumorbamf = "/home/spark/todaitoptest/testdata/LUAD-311N_6_12sort.bam";
 		
 		
-		String twobitref = "/GLUSTER_DIST/data/Genomes/hg19_all/hg19.2bit";
+		String twobitref = "/home/spark/todaitoptest/ref/hg38.2bit";
 		
-		String targetRegion = "/data/users/yamamoto/TodaiPanel/target/S3035822_Covered.bed";
+		String targetRegion = "/home/spark/todaitoptest/ref/S3035822_Covered_sm_lift_hg38.bed";
 		
 		
-		String outdir = "/GLUSTER_DIST/data/users/ueda/toptest";
+		String outdir = "/home/spark/todaitoptest/output/realign";
 		
 		List<String> l = new ArrayList<String>();
 		
@@ -52,7 +53,7 @@ public class TestRealgin {
 	
 		add(l,"-o",outdir);
 		
-		add(l,"-nt","8");
+		add(l,"-nt","4");
 		
 				
 		

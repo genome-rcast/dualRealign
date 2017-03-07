@@ -54,7 +54,7 @@ public class TwobitReferenceSequence implements ReferenceSequenceFile {
 			}
 			for (int n = start; n < end; n++) {
 
-				seq[n] = (byte) tgr._getGenomeNuc(n, true);
+				seq[n-1] = (byte)tgr.getGenomeNuc(chr, n,true);
 
 			}
 

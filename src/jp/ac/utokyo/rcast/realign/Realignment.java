@@ -62,7 +62,7 @@ public class Realignment extends ReadWriteBase {
 			System.out.println(e1.getMessage());
 			HelpFormatter help = new HelpFormatter();
 			help.setOptionComparator(new OptionComparator(optionList));
-			help.printHelp("karkinos.jar analysis", opts, true);
+			help.printHelp("dualRealign.jar", opts, true);
 			return;
 		}
 
@@ -125,6 +125,7 @@ public class Realignment extends ReadWriteBase {
 
 		// load target
 		TwoBitGenomeReader tgr = new TwoBitGenomeReader(new File(twobitref));
+		tgr.setCheckRepeat(false);
 		DataSet dataset = null;
 		if (targetRegion != null) {
 			dataset = new DataSet(tgr.readIndex());
@@ -198,7 +199,8 @@ public class Realignment extends ReadWriteBase {
 
 				//
 		TreeMap<Integer, Integer> indelpos = new TreeMap<Integer, Integer>();
-
+		
+		
 		// stats indel pos
 		System.out.println("stat indel pos " + chrom);
 
@@ -348,6 +350,7 @@ public class Realignment extends ReadWriteBase {
 
 			TwobitReferenceSequence tbrs = new TwobitReferenceSequence(tgr,
 					normalbamr.getFileHeader());
+			
 			ReferenceSequence res = tbrs.getSequence(chrom, start, end);
 
 			// realgin

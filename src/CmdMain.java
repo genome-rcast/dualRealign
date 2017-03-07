@@ -24,9 +24,9 @@ import jp.ac.utokyo.rcast.realign.Realignment;
 
 public class CmdMain {
 
-	//public static final String version = "Karkinos2.0 version 0.1 2013/4/22";
-	public static final String version = "Karkinos2.0 version 0.3 2016/11/30";
-
+	
+	public static final String version = "dualAlign version 0.1.0 2017/03/06";
+	
 	public static void main(String[] arg) throws Exception {
 
 		//
@@ -61,10 +61,8 @@ public class CmdMain {
 
 	private static void printMsg() {
 		System.out.println(version);
-		System.out.println("usage: dualAlign.jar <command> options");
-				System.out
-		.println("		 realign	realignment normar,tumor bam file");
-		
+		System.out.println("usage: dualAlign.jar  realign <command> options");
+				
 		
 
 	}
