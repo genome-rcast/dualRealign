@@ -54,7 +54,8 @@ public class SRMA_mod  {
 	@Option(doc = "The minimum haploid coverage for the consensus.", optional = true)
 	public int MINIMUM_ALLELE_COVERAGE = 3;
 	@Option(doc = "The maximum total coverage over a position to consider, otherwise ignore the re-alignment.", optional = true)
-	public int MAXIMUM_TOTAL_COVERAGE = 400;
+	//public int MAXIMUM_TOTAL_COVERAGE = 400;
+	public int MAXIMUM_TOTAL_COVERAGE = 1500;
 	@Option(doc = "The file containing ranges to examine.", optional = true)
 	public File RANGES = null;
 	@Option(doc = "A range to examine.", optional = true)
@@ -68,13 +69,14 @@ public class SRMA_mod  {
 	@Option(doc = "Whether to suppress job-progress info on System.err", optional = true)
 	public boolean QUIET_STDERR = false;
 	@Option(doc = "The maximum number of nodes on the heap before re-alignment is ignored", optional = true)
-	public int MAX_HEAP_SIZE = 8192;
+	//public int MAX_HEAP_SIZE = 8192;
+	public int MAX_HEAP_SIZE = 8192*8;
 	@Option(doc = "The maximum number of SAM records in the queue before re-alignment", optional = true)
 	public int MAX_QUEUE_SIZE = 65536;
 	@Option(doc = "Turn on/off aggressive graph pruning", optional = true)
 	public boolean GRAPH_PRUNING = false;
 	@Option(doc = "The number of threads for parallel processing", optional = true)
-	public int NUM_THREADS = 2;
+	public int NUM_THREADS = 1;
 
 	private long startTime;
 	private long endTime;
@@ -657,6 +659,16 @@ public class SRMA_mod  {
 					AlignRecord curAlignRecord = iter.next();
 					SAMRecord curSAMRecord = curAlignRecord.record;
 					Node curNode = curAlignRecord.node;
+					
+					//debug
+					
+						String readname = "HWI-D00677:85:CA2PBANXX:7:2313:7420:13961";
+						if(curAlignRecord.record.getReadName().equals(readname)){
+							System.out.println("debug 0");
+							System.out.println("before="+curAlignRecord.record.getAlignmentStart() +" "+ curAlignRecord.record.getCigarString());
+							
+						}
+					
 
 					// Align - this will overwrite/change the alignment
 					Align.align(graph, curSAMRecord, curNode,

@@ -41,7 +41,7 @@ public class TestRealgin {
 		String targetRegion = "/home/spark/todaitoptest/ref/S3035822_Covered_sm_lift_hg38.bed";
 		
 		
-		String outdir = "/home/spark/todaitoptest/output/realign";
+		String outdir = "/home/spark/todaitoptest/output/realign5";
 		
 		List<String> l = new ArrayList<String>();
 		

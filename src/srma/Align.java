@@ -861,9 +861,31 @@ public class Align {
 		Cigar cigar = new Cigar(cigarElements);
 		int nummatchAfter = (rec.getReadLength()-cliplen(cigar)) - (numEdits-indellen(cigar)); 
 
-		// ueda
-		if (nummatchAfter >= nummatchOrg) {
+		
+		boolean sameExceptS = sameExceptS(cigar,rec.getCigar());
+		
+		String readname = "HWI-D00677:85:CA2PBANXX:7:2313:7420:13961";
+		if(rec.getReadName().equals(readname)){
+			System.out.println("debug");
+			System.out.println("before="+rec.getAlignmentStart() +" "+ rec.getCigarString());
+			System.out.println("after ="+alignmentStart +" "+ cigar);
+		}
 
+				
+		String readname2 = "HWI-D00677:85:CA2PBANXX:7:1216:15990:91680";
+		if(rec.getReadName().equals(readname2)){
+			System.out.println("debug2");
+			System.out.println("before="+rec.getAlignmentStart() +" "+ rec.getCigarString());
+			System.out.println("after ="+alignmentStart +" "+ cigar);
+		}
+				
+		// ueda
+		if (nummatchAfter >= nummatchOrg && !sameExceptS ) {
+			
+			if(!containIndel(rec.getCigar())&&containIndel(cigar)){
+			 System.out.println("before="+rec.getAlignmentStart() +" "+ rec.getCigarString());
+			 System.out.println("after ="+alignmentStart +" "+ cigar);
+			}
 			// Update SAM record
 			rec.setCigar(cigar);
 			rec.setAlignmentStart(alignmentStart);
@@ -883,6 +905,62 @@ public class Align {
 			rec.setAttribute("PG", programRecord.getId());
 			rec.setAttribute("NM", numEdits);
 		}
+	}
+
+	private static boolean containIndel(Cigar cigar) {
+		for (CigarElement ce : cigar.getCigarElements()) {
+
+			if (ce.getOperator().equals(CigarOperator.D)) {
+				return true;
+			}
+			if (ce.getOperator().equals(CigarOperator.I)) {
+				return false;
+			}
+		
+			
+		}
+		return false;
+	}
+
+	private static boolean sameExceptS(Cigar cigar, Cigar cigar2) {
+		
+		List<CigarElement> cel = cigar.getCigarElements();
+		List<CigarElement> cel2 = cigar2.getCigarElements();
+		
+		if(cel.size()!=cel2.size()){
+			return false;
+		}
+		
+		for(int n=0;n<cel.size();n++){
+			
+			//
+			CigarElement ce1 = cel.get(n);
+			CigarElement ce2 = cel2.get(n);
+			if(ce1.getOperator().equals(CigarOperator.S)&&ce2.getOperator().equals(CigarOperator.S)){
+				continue;
+			}
+			if(ce1.getOperator().equals(ce2.getOperator())){
+				
+				if(ce1.getLength()==ce2.getLength()){
+					continue;
+				}else{
+					return false;
+				}
+				
+			}else{
+				return false;
+			}
+			
+		}
+		
+		return true;
+		
+	}
+
+	private static boolean send(Cigar cigar) {
+		List<CigarElement> cel = cigar.getCigarElements();
+		CigarElement ce = cel.get(cel.size()-1);
+		return ce.getOperator().equals(CigarOperator.S);
 	}
 
 	// private static void check(byte[] bt) {

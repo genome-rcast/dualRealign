@@ -164,10 +164,16 @@ public class Realignment extends ReadWriteBase {
 			SAMFileReader tumorbamr = getReader(tumorbamf);
 			SAMFileReader tumorbamr2 = getReader(tumorbamf);
 			if (usualchrom) {
-
+				
+				//debug
+				//if(!chrom.equals("chr17")){
+				//	continue;
+				//}
 				
 				realignChrom(chrom, normalbamr, normalbamw, tumorbamr,
 						tumorbamw, tgr, dataset, numthread,normalbamr2,tumorbamr2);
+				//
+				//break;
 
 			} else {
 
@@ -199,13 +205,17 @@ public class Realignment extends ReadWriteBase {
 
 				//
 		TreeMap<Integer, Integer> indelpos = new TreeMap<Integer, Integer>();
+		int startR =0;
+		int endR = 0;
 		
+		//startR =7675894;
+		//endR = 7676762;
 		
 		// stats indel pos
 		System.out.println("stat indel pos " + chrom);
 
 		CloseableIterator<SAMRecord> iteN = normalbamr
-				.query(chrom, 0, 0, false);
+				.query(chrom, startR, endR, false);
 		while (iteN.hasNext()) {
 
 			SAMRecord sam = iteN.next();
@@ -236,7 +246,7 @@ public class Realignment extends ReadWriteBase {
 		}
 		iteN.close();
 
-		CloseableIterator<SAMRecord> iteT = tumorbamr.query(chrom, 0, 0, false);
+		CloseableIterator<SAMRecord> iteT = tumorbamr.query(chrom, startR, endR, false);
 		while (iteT.hasNext()) {
 
 			SAMRecord sam = iteT.next();
@@ -272,7 +282,7 @@ public class Realignment extends ReadWriteBase {
 		int cnt = 0;
 		for (Entry<Integer, Integer> et : indelpos.entrySet()) {
 
-			if (et.getValue() >= 400) {
+			if (et.getValue() >= 2000) {
 				single.add(et.getKey());
 			}
 			if (et.getValue() <= 2) {
@@ -293,12 +303,14 @@ public class Realignment extends ReadWriteBase {
 		// to Normal, Tumor, mixFor realgin
 		System.out.println("extract realgin reads " + chrom);
 
-		CloseableIterator<SAMRecord> iteN2 = normalbamr2.query(chrom, 0, 0,
+		CloseableIterator<SAMRecord> iteN2 = normalbamr2.query(chrom, startR, endR,
 				false);
 		while (iteN2.hasNext()) {
 
 			SAMRecord sam = iteN2.next();
-			if (contatinIndel(sam) || nearIndel(sam, indelpos)) {
+			int nm = getNM(sam);
+			if (((nm>0)&&(contatinIndel(sam) || nearIndel(sam, indelpos)))) {
+
 
 				sam.setAttribute("YY", FlgNormal);
 				realgin.add(sam);
@@ -313,12 +325,13 @@ public class Realignment extends ReadWriteBase {
 		iteN2.close();
 
 		CloseableIterator<SAMRecord> iteT2 = tumorbamr2
-				.query(chrom, 0, 0, false);
+				.query(chrom, startR, endR, false);
 
 		while (iteT2.hasNext()) {
 
 			SAMRecord sam = iteT2.next();
-			if (contatinIndel(sam) || nearIndel(sam, indelpos)) {
+			int nm = getNM(sam);
+			if (((nm>0)&&(contatinIndel(sam) || nearIndel(sam, indelpos)))) {
 
 				sam.setAttribute("YY", FlgTumor);
 				realgin.add(sam);
@@ -343,6 +356,60 @@ public class Realignment extends ReadWriteBase {
 
 			int start = realgin.get(0).getAlignmentStart();
 			int end = realgin.get(realgin.size() - 1).getAlignmentEnd();
+			
+			
+			//debug
+//			for(SAMRecord rec:realgin){
+//				String readname = "HWI-D00677:85:CA2PBANXX:7:2313:7420:13961";
+//				if(rec.getReadName().equals(readname)){
+//					System.out.println("debug realgin");
+//					System.out.println("before="+rec.getAlignmentStart() +" "+ rec.getCigarString());
+//					
+//				}
+//
+//						
+//				String readname2 = "HWI-D00677:85:CA2PBANXX:7:1216:15990:91680";
+//				if(rec.getReadName().equals(readname2)){
+//					System.out.println("debug2 realgin");
+//					System.out.println("before="+rec.getAlignmentStart() +" "+ rec.getCigarString());
+//					
+//				}
+//			}
+//			for(SAMRecord rec:normal){
+//				String readname = "HWI-D00677:85:CA2PBANXX:7:2313:7420:13961";
+//				if(rec.getReadName().equals(readname)){
+//					System.out.println("debug normal");
+//					System.out.println("before="+rec.getAlignmentStart() +" "+ rec.getCigarString());
+//					
+//				}
+//
+//						
+//				String readname2 = "HWI-D00677:85:CA2PBANXX:7:1216:15990:91680";
+//				if(rec.getReadName().equals(readname2)){
+//					System.out.println("debug2 nomal");
+//					System.out.println("before="+rec.getAlignmentStart() +" "+ rec.getCigarString());
+//					
+//				}
+//			}
+//			for(SAMRecord rec:tumor){
+//				String readname = "HWI-D00677:85:CA2PBANXX:7:2313:7420:13961";
+//				if(rec.getReadName().equals(readname)){
+//					System.out.println("debug normal");
+//					System.out.println("before="+rec.getAlignmentStart() +" "+ rec.getCigarString());
+//					
+//				}
+//
+//						
+//				String readname2 = "HWI-D00677:85:CA2PBANXX:7:1216:15990:91680";
+//				if(rec.getReadName().equals(readname2)){
+//					System.out.println("debug2 nomal");
+//					System.out.println("before="+rec.getAlignmentStart() +" "+ rec.getCigarString());
+//					
+//				}
+//			}
+			//debug
+			
+			
 			//
 
 			System.out.println("realign by SRMA " + chrom + " size ="
@@ -364,6 +431,8 @@ public class Realignment extends ReadWriteBase {
 			try {
 
 				for (List<SAMRecord> list : sep) {
+					
+			
 
 					Runtask task = new Runtask(list, ret,
 							normalbamr.getFileHeader(), res, tbrs, chrom,
@@ -419,6 +488,15 @@ public class Realignment extends ReadWriteBase {
 
 		}
 
+	}
+
+	private int getNM(SAMRecord sam) {
+		Integer nm = sam.getIntegerAttribute("NM");
+		
+		if(nm!=null){
+			return nm;
+		}		
+		return 0;
 	}
 
 	class Runtask implements Runnable {
@@ -505,14 +583,21 @@ public class Realignment extends ReadWriteBase {
 	}
 
 	private boolean nearIndel(SAMRecord sam, TreeMap<Integer, Integer> indelpos) {
+		
+//		String readname2 = "HWI-D00677:85:CA2PBANXX:7:1216:15990:91680";
+//		if(sam.getReadName().equals(readname2)){
+//			System.out.println("debug2 realgin");
+//			System.out.println("before="+sam.getAlignmentStart() +" "+ sam.getCigarString());
+//			
+//		}
 
 		int s = sam.getAlignmentStart();
 		int e = sam.getAlignmentEnd();
 		//
 		int readlen = sam.getReadLength();
 
-		Integer f = indelpos.ceilingKey(s);
-		Integer c = indelpos.floorKey(e);
+		Integer c = indelpos.ceilingKey(s);
+		Integer f = indelpos.floorKey(e);
 
 		if (f != null) {
 			if (Math.abs(s - f) < readlen) {
