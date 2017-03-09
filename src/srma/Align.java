@@ -56,6 +56,15 @@ public class Align {
 
 		// Debugging stuff
 		String readName = rec.getReadName();
+		
+		String readname2 = "HWI-D00677:85:CA2PBANXX:7:1115:18706:42919";
+		 if(rec.getReadName().equals(readname2)){
+			 
+			 System.out.println("debug2 realgin");
+			 System.out.println("before="+rec.getAlignmentStart() +" "+
+			 rec.getCigarString());
+		
+		 }
 
 		assert SRMAUtil.Space.COLORSPACE != space;
 
@@ -342,6 +351,9 @@ public class Align {
 					iter = curAlignHeapNode.node.next.listIterator();
 				}
 				while (iter.hasNext()) {
+					
+					
+					 
 					NodeRecord next = iter.next();
 					int f = passFilters(graph, next.node, next.coverage,
 							alleleCoverageCutoffs, MAXIMUM_TOTAL_COVERAGE);
@@ -864,20 +876,17 @@ public class Align {
 		
 		boolean sameExceptS = sameExceptS(cigar,rec.getCigar());
 		
-		String readname = "HWI-D00677:85:CA2PBANXX:7:2313:7420:13961";
-		if(rec.getReadName().equals(readname)){
-			System.out.println("debug");
-			System.out.println("before="+rec.getAlignmentStart() +" "+ rec.getCigarString());
-			System.out.println("after ="+alignmentStart +" "+ cigar);
-		}
 
 				
-		String readname2 = "HWI-D00677:85:CA2PBANXX:7:1216:15990:91680";
-		if(rec.getReadName().equals(readname2)){
-			System.out.println("debug2");
-			System.out.println("before="+rec.getAlignmentStart() +" "+ rec.getCigarString());
-			System.out.println("after ="+alignmentStart +" "+ cigar);
-		}
+		String readname2 = "HWI-D00677:85:CA2PBANXX:7:1115:18706:42919";
+		 if(rec.getReadName().equals(readname2)){
+			 
+			 System.out.println("debug2 realgin");
+			 System.out.println("before="+rec.getAlignmentStart() +" "+
+			 rec.getCigarString());
+		
+		 }
+		
 				
 		// ueda
 		if (nummatchAfter >= nummatchOrg && !sameExceptS ) {

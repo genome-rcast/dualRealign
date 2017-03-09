@@ -1,17 +1,5 @@
 package jp.ac.utokyo.rcast.realign;
 
-import htsjdk.samtools.CigarElement;
-import htsjdk.samtools.CigarOperator;
-import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMFileReader;
-import htsjdk.samtools.SAMFileWriter;
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMRecordCoordinateComparator;
-import htsjdk.samtools.SAMSequenceRecord;
-import htsjdk.samtools.reference.ReferenceSequence;
-import htsjdk.samtools.reference.ReferenceSequenceFile;
-import htsjdk.samtools.util.CloseableIterator;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -21,16 +9,11 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.TreeSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-
-import jp.ac.utokyo.rcast.karkinos.exec.DataSet;
-import jp.ac.utokyo.rcast.karkinos.exec.TumorGenotyper;
-import jp.ac.utokyo.rcast.karkinos.utils.OptionComparator;
-import jp.ac.utokyo.rcast.karkinos.utils.ReadWriteBase;
-import jp.ac.utokyo.rcast.karkinos.utils.TwoBitGenomeReader;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
@@ -40,6 +23,25 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
 
+import htsjdk.samtools.Cigar;
+import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.CigarOperator;
+import htsjdk.samtools.SAMException;
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMFileReader;
+import htsjdk.samtools.SAMFileWriter;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMRecordCoordinateComparator;
+import htsjdk.samtools.SAMSequenceRecord;
+import htsjdk.samtools.SAMTag;
+import htsjdk.samtools.reference.ReferenceSequence;
+import htsjdk.samtools.reference.ReferenceSequenceFile;
+import htsjdk.samtools.util.CloseableIterator;
+import htsjdk.samtools.util.StringUtil;
+import jp.ac.utokyo.rcast.karkinos.exec.DataSet;
+import jp.ac.utokyo.rcast.karkinos.utils.OptionComparator;
+import jp.ac.utokyo.rcast.karkinos.utils.ReadWriteBase;
+import jp.ac.utokyo.rcast.karkinos.utils.TwoBitGenomeReader;
 import srma.SRMA_mod;
 import srma.TwobitReferenceSequence;
 
@@ -111,8 +113,7 @@ public class Realignment extends ReadWriteBase {
 		}
 
 		try {
-			realign(normalbamf, tumorbamf, twobitref, targetRegion, outdir,
-					numthread);
+			realign(normalbamf, tumorbamf, twobitref, targetRegion, outdir, numthread);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -120,8 +121,8 @@ public class Realignment extends ReadWriteBase {
 
 	}
 
-	private void realign(String normalbamf, String tumorbamf, String twobitref,
-			String targetRegion, String outdir, int numthread) throws Exception {
+	private void realign(String normalbamf, String tumorbamf, String twobitref, String targetRegion, String outdir,
+			int numthread) throws Exception {
 
 		// load target
 		TwoBitGenomeReader tgr = new TwoBitGenomeReader(new File(twobitref));
@@ -132,22 +133,17 @@ public class Realignment extends ReadWriteBase {
 			dataset.loadTargetBed(targetRegion, tgr);
 		}
 		//
-		
-		SAMFileReader forheader = getReader(normalbamf);
-		String outnameN = outdir + "/" + new File(normalbamf).getName()
-				+ "_realign.bam";
-		String outnameT = outdir + "/" + new File(tumorbamf).getName()
-				+ "_realign.bam";
 
-		SAMFileWriter normalbamw = getPreSortWriter(forheader.getFileHeader(),
-				outnameN);
+		SAMFileReader forheader = getReader(normalbamf);
+		String outnameN = outdir + "/" + new File(normalbamf).getName() + "_realign.bam";
+		String outnameT = outdir + "/" + new File(tumorbamf).getName() + "_realign.bam";
+
+		SAMFileWriter normalbamw = getPreSortWriter(forheader.getFileHeader(), outnameN);
 		SAMFileWriter tumorbamw = getPreSortWriter(forheader.getFileHeader(), outnameT);
 
-		List<SAMSequenceRecord> ssrList = forheader.getFileHeader()
-				.getSequenceDictionary().getSequences();
+		List<SAMSequenceRecord> ssrList = forheader.getFileHeader().getSequenceDictionary().getSequences();
 		forheader.close();
-		
-		
+
 		int chromcnt = 0;
 
 		System.out.println("start realgin");
@@ -158,26 +154,25 @@ public class Realignment extends ReadWriteBase {
 			boolean usualchrom = usualChrom(chrom);
 
 			System.out.println("processing chr " + chrom);
-			
+
 			SAMFileReader normalbamr = getReader(normalbamf);
 			SAMFileReader normalbamr2 = getReader(normalbamf);
 			SAMFileReader tumorbamr = getReader(tumorbamf);
 			SAMFileReader tumorbamr2 = getReader(tumorbamf);
 			if (usualchrom) {
-				
-				//debug
-				//if(!chrom.equals("chr17")){
+
+				// debug
+				//if (!chrom.equals("chr17")) {
 				//	continue;
 				//}
-				
-				realignChrom(chrom, normalbamr, normalbamw, tumorbamr,
-						tumorbamw, tgr, dataset, numthread,normalbamr2,tumorbamr2);
+
+				realignChrom(chrom, normalbamr, normalbamw, tumorbamr, tumorbamw, tgr, dataset, numthread, normalbamr2,
+						tumorbamr2);
 				//
-				//break;
+				// break;
 
 			} else {
 
-				
 				copy(chrom, normalbamr, normalbamw);
 				copy(chrom, tumorbamr, tumorbamw);
 
@@ -189,7 +184,6 @@ public class Realignment extends ReadWriteBase {
 
 		}
 
-		
 		normalbamw.close();
 		tumorbamw.close();
 
@@ -198,24 +192,22 @@ public class Realignment extends ReadWriteBase {
 	public static final int FlgNormal = 1;
 	public static final int FlgTumor = 2;
 
-	private void realignChrom(String chrom, SAMFileReader normalbamr,
-			SAMFileWriter normalbamw, SAMFileReader tumorbamr,
-			SAMFileWriter tumorbamw, TwoBitGenomeReader tgr, DataSet dataset,
-			int numthread, SAMFileReader normalbamr2, SAMFileReader tumorbamr2) throws Exception {
+	private void realignChrom(String chrom, SAMFileReader normalbamr, SAMFileWriter normalbamw, SAMFileReader tumorbamr,
+			SAMFileWriter tumorbamw, TwoBitGenomeReader tgr, DataSet dataset, int numthread, SAMFileReader normalbamr2,
+			SAMFileReader tumorbamr2) throws Exception {
 
-				//
-		TreeMap<Integer, Integer> indelpos = new TreeMap<Integer, Integer>();
-		int startR =0;
+		//
+		TreeMap<Integer, Indel> indelpos = new TreeMap<Integer, Indel>();
+		int startR = 0;
 		int endR = 0;
-		
-		//startR =7675894;
+
+		//startR = 7675894;
 		//endR = 7676762;
-		
+
 		// stats indel pos
 		System.out.println("stat indel pos " + chrom);
 
-		CloseableIterator<SAMRecord> iteN = normalbamr
-				.query(chrom, startR, endR, false);
+		CloseableIterator<SAMRecord> iteN = normalbamr.query(chrom, startR, endR, false);
 		while (iteN.hasNext()) {
 
 			SAMRecord sam = iteN.next();
@@ -226,18 +218,30 @@ public class Realignment extends ReadWriteBase {
 					if (null != dataset.getCh().getCapInterval(chrom, ip)) {
 
 						if (indelpos.containsKey(ip)) {
-							indelpos.put(ip, indelpos.get(ip) + 1);
+
+							// indelpos.put(ip, indelpos.get(ip) + 1);
+							Indel indel = indelpos.get(ip);
+							indel.inc();
+
 						} else {
-							indelpos.put(ip, 1);
+
+							Indel indel = new Indel(sam);
+							indelpos.put(ip, indel);
 						}
 
 					}
 				} else {
 
 					if (indelpos.containsKey(ip)) {
-						indelpos.put(ip, indelpos.get(ip) + 1);
+
+						// indelpos.put(ip, indelpos.get(ip) + 1);
+						Indel indel = indelpos.get(ip);
+						indel.inc();
+
 					} else {
-						indelpos.put(ip, 1);
+
+						Indel indel = new Indel(sam);
+						indelpos.put(ip, indel);
 					}
 
 				}
@@ -257,18 +261,30 @@ public class Realignment extends ReadWriteBase {
 					if (null != dataset.getCh().getCapInterval(chrom, ip)) {
 
 						if (indelpos.containsKey(ip)) {
-							indelpos.put(ip, indelpos.get(ip) + 1);
+
+							// indelpos.put(ip, indelpos.get(ip) + 1);
+							Indel indel = indelpos.get(ip);
+							indel.inc();
+
 						} else {
-							indelpos.put(ip, 1);
+
+							Indel indel = new Indel(sam);
+							indelpos.put(ip, indel);
 						}
 
 					}
 				} else {
 
 					if (indelpos.containsKey(ip)) {
-						indelpos.put(ip, indelpos.get(ip) + 1);
+
+						// indelpos.put(ip, indelpos.get(ip) + 1);
+						Indel indel = indelpos.get(ip);
+						indel.inc();
+
 					} else {
-						indelpos.put(ip, 1);
+
+						Indel indel = new Indel(sam);
+						indelpos.put(ip, indel);
 					}
 
 				}
@@ -280,12 +296,12 @@ public class Realignment extends ReadWriteBase {
 
 		Set<Integer> single = new HashSet<Integer>();
 		int cnt = 0;
-		for (Entry<Integer, Integer> et : indelpos.entrySet()) {
+		for (Entry<Integer, Indel> et : indelpos.entrySet()) {
 
-			if (et.getValue() >= 2000) {
+			if (et.getValue().getCount() >= 5000) {
 				single.add(et.getKey());
 			}
-			if (et.getValue() <= 2) {
+			if (et.getValue().getCount() <= 2) {
 				single.add(et.getKey());
 			}
 
@@ -303,14 +319,27 @@ public class Realignment extends ReadWriteBase {
 		// to Normal, Tumor, mixFor realgin
 		System.out.println("extract realgin reads " + chrom);
 
-		CloseableIterator<SAMRecord> iteN2 = normalbamr2.query(chrom, startR, endR,
-				false);
+		CloseableIterator<SAMRecord> iteN2 = normalbamr2.query(chrom, startR, endR, false);
 		while (iteN2.hasNext()) {
 
 			SAMRecord sam = iteN2.next();
 			int nm = getNM(sam);
-			if (((nm>0)&&(contatinIndel(sam) || nearIndel(sam, indelpos)))) {
+			// if depth is deep and indel is clear just take 1/3 of reads
+			// to make it light weight
+			if (contatinIndel(sam)) {
 
+				if (enoughMatch(sam) && enoughDepth(sam, indelpos)) {
+
+					//
+					if (Math.random() < 0.85) {
+						normal.add(sam);
+						continue;
+					}
+				}
+
+			}
+
+			if (((nm > 0) && (contatinIndel(sam) || nearIndel(sam, indelpos)))) {
 
 				sam.setAttribute("YY", FlgNormal);
 				realgin.add(sam);
@@ -324,14 +353,29 @@ public class Realignment extends ReadWriteBase {
 		}
 		iteN2.close();
 
-		CloseableIterator<SAMRecord> iteT2 = tumorbamr2
-				.query(chrom, startR, endR, false);
+		CloseableIterator<SAMRecord> iteT2 = tumorbamr2.query(chrom, startR, endR, false);
 
 		while (iteT2.hasNext()) {
 
 			SAMRecord sam = iteT2.next();
+
+			// if depth is deep and indel is clear just take 1/3 of reads
+			// to make it light weight
+			if (contatinIndel(sam)) {
+
+				if (enoughMatch(sam) && enoughDepth(sam, indelpos)) {
+
+					//
+					if (Math.random() < 0.85) {
+						tumor.add(sam);
+						continue;
+					}
+				}
+
+			}
+
 			int nm = getNM(sam);
-			if (((nm>0)&&(contatinIndel(sam) || nearIndel(sam, indelpos)))) {
+			if (((nm > 0) && (contatinIndel(sam) || nearIndel(sam, indelpos)))) {
 
 				sam.setAttribute("YY", FlgTumor);
 				realgin.add(sam);
@@ -356,68 +400,13 @@ public class Realignment extends ReadWriteBase {
 
 			int start = realgin.get(0).getAlignmentStart();
 			int end = realgin.get(realgin.size() - 1).getAlignmentEnd();
-			
-			
-			//debug
-//			for(SAMRecord rec:realgin){
-//				String readname = "HWI-D00677:85:CA2PBANXX:7:2313:7420:13961";
-//				if(rec.getReadName().equals(readname)){
-//					System.out.println("debug realgin");
-//					System.out.println("before="+rec.getAlignmentStart() +" "+ rec.getCigarString());
-//					
-//				}
-//
-//						
-//				String readname2 = "HWI-D00677:85:CA2PBANXX:7:1216:15990:91680";
-//				if(rec.getReadName().equals(readname2)){
-//					System.out.println("debug2 realgin");
-//					System.out.println("before="+rec.getAlignmentStart() +" "+ rec.getCigarString());
-//					
-//				}
-//			}
-//			for(SAMRecord rec:normal){
-//				String readname = "HWI-D00677:85:CA2PBANXX:7:2313:7420:13961";
-//				if(rec.getReadName().equals(readname)){
-//					System.out.println("debug normal");
-//					System.out.println("before="+rec.getAlignmentStart() +" "+ rec.getCigarString());
-//					
-//				}
-//
-//						
-//				String readname2 = "HWI-D00677:85:CA2PBANXX:7:1216:15990:91680";
-//				if(rec.getReadName().equals(readname2)){
-//					System.out.println("debug2 nomal");
-//					System.out.println("before="+rec.getAlignmentStart() +" "+ rec.getCigarString());
-//					
-//				}
-//			}
-//			for(SAMRecord rec:tumor){
-//				String readname = "HWI-D00677:85:CA2PBANXX:7:2313:7420:13961";
-//				if(rec.getReadName().equals(readname)){
-//					System.out.println("debug normal");
-//					System.out.println("before="+rec.getAlignmentStart() +" "+ rec.getCigarString());
-//					
-//				}
-//
-//						
-//				String readname2 = "HWI-D00677:85:CA2PBANXX:7:1216:15990:91680";
-//				if(rec.getReadName().equals(readname2)){
-//					System.out.println("debug2 nomal");
-//					System.out.println("before="+rec.getAlignmentStart() +" "+ rec.getCigarString());
-//					
-//				}
-//			}
-			//debug
-			
-			
+
 			//
 
-			System.out.println("realign by SRMA " + chrom + " size ="
-					+ realgin.size());
+			System.out.println("realign by SRMA " + chrom + " size =" + realgin.size());
 
-			TwobitReferenceSequence tbrs = new TwobitReferenceSequence(tgr,
-					normalbamr.getFileHeader());
-			
+			TwobitReferenceSequence tbrs = new TwobitReferenceSequence(tgr, normalbamr.getFileHeader());
+
 			ReferenceSequence res = tbrs.getSequence(chrom, start, end);
 
 			// realgin
@@ -431,12 +420,8 @@ public class Realignment extends ReadWriteBase {
 			try {
 
 				for (List<SAMRecord> list : sep) {
-					
-			
 
-					Runtask task = new Runtask(list, ret,
-							normalbamr.getFileHeader(), res, tbrs, chrom,
-							start, end);
+					Runtask task = new Runtask(list, ret, normalbamr.getFileHeader(), res, tbrs, chrom, start, end);
 
 					exec.execute(task);
 
@@ -490,12 +475,67 @@ public class Realignment extends ReadWriteBase {
 
 	}
 
+	private boolean enoughDepth(SAMRecord sam, TreeMap<Integer, Indel> indelpos) {
+
+		int s = sam.getAlignmentStart();
+		int e = sam.getAlignmentEnd();
+		//
+
+		Integer f = indelpos.floorKey(e);
+		Indel indel = null;
+		if (f != null && (s < f && f < e)) {
+
+			indel = indelpos.get(f);
+		}
+
+		Integer c = indelpos.ceilingKey(s);
+		if (c != null && (s < c && c < e)) {
+
+			indel = indelpos.get(f);
+		}
+		if (indel == null) {
+			return false;
+		}
+		return indel.getCount() >= 100;
+	}
+
+	private boolean enoughMatch(SAMRecord sam) {
+
+		List<CigarElement> l = sam.getCigar().getCigarElements();
+
+		//
+		if (l.size() < 3) {
+			return false;
+		}
+
+		for (int n = 0; n < l.size() - 3; n++) {
+
+			CigarElement c0 = l.get(n);
+			CigarElement c1 = l.get(n + 1);
+			CigarElement c2 = l.get(n + 2);
+
+			if (c0.getOperator().equals(CigarOperator.M)
+					&& (c1.getOperator().equals(CigarOperator.I) || c1.getOperator().equals(CigarOperator.D))
+					&& c2.getOperator().equals(CigarOperator.M)) {
+
+				if (c0.getLength() >= 30 || c2.getLength() >= 30) {
+
+					return true;
+
+				}
+
+			}
+
+		}
+		return false;
+	}
+
 	private int getNM(SAMRecord sam) {
 		Integer nm = sam.getIntegerAttribute("NM");
-		
-		if(nm!=null){
+
+		if (nm != null) {
 			return nm;
-		}		
+		}
 		return 0;
 	}
 
@@ -510,10 +550,8 @@ public class Realignment extends ReadWriteBase {
 		int start;
 		int end;
 
-		Runtask(List<SAMRecord> list, List<List<SAMRecord>> ret,
-				SAMFileHeader fileHeader, ReferenceSequence rsf,
-				ReferenceSequenceFile referenceSequenceFile, String chr,
-				int start, int end) {
+		Runtask(List<SAMRecord> list, List<List<SAMRecord>> ret, SAMFileHeader fileHeader, ReferenceSequence rsf,
+				ReferenceSequenceFile referenceSequenceFile, String chr, int start, int end) {
 
 			this.list = list;
 			this.ret = ret;
@@ -531,8 +569,8 @@ public class Realignment extends ReadWriteBase {
 
 			SRMA_mod inst = new SRMA_mod();
 			try {
-				List<SAMRecord> rlist = inst.doWorkSRMA(fileHeader, rsf,
-						referenceSequenceFile, chr, start, end, list, 1);
+				List<SAMRecord> rlist = inst.doWorkSRMA(fileHeader, rsf, referenceSequenceFile, chr, start, end, list,
+						1);
 
 				synchronized (ret) {
 					ret.add(rlist);
@@ -582,14 +620,18 @@ public class Realignment extends ReadWriteBase {
 		return l;
 	}
 
-	private boolean nearIndel(SAMRecord sam, TreeMap<Integer, Integer> indelpos) {
+	private boolean nearIndel(SAMRecord sam, TreeMap<Integer, Indel> indelpos) {
+
+		 String readname2 = "HWI-D00677:85:CA2PBANXX:7:1115:18706:42919";
+		 if(sam.getReadName().equals(readname2)){
+			 
+			 System.out.println("debug2 realgin");
+			 System.out.println("before="+sam.getAlignmentStart() +" "+
+			 sam.getCigarString());
 		
-//		String readname2 = "HWI-D00677:85:CA2PBANXX:7:1216:15990:91680";
-//		if(sam.getReadName().equals(readname2)){
-//			System.out.println("debug2 realgin");
-//			System.out.println("before="+sam.getAlignmentStart() +" "+ sam.getCigarString());
-//			
-//		}
+		 }
+		
+		
 
 		int s = sam.getAlignmentStart();
 		int e = sam.getAlignmentEnd();
@@ -601,16 +643,212 @@ public class Realignment extends ReadWriteBase {
 
 		if (f != null) {
 			if (Math.abs(s - f) < readlen) {
-				return true;
+
+				Indel idel = indelpos.get(f);
+				int sIn = idel.pos;
+				int eIn = idel.pos + idel.len;
+				//
+				try {
+					Set<Integer> mispos = getMisPos(sam);
+					for (int n : mispos) {
+						if (n >= sIn && n <= eIn) {
+							return true;
+						}
+					}
+					//
+					//return true;
+				} catch (Exception ex) {
+					ex.printStackTrace();
+				}
 			}
 		}
 		if (c != null) {
 			if (Math.abs(c - e) < readlen) {
-				return true;
+
+				Indel idel = indelpos.get(c);
+				int sIn = idel.pos;
+				int eIn = idel.pos + idel.len;
+				try {
+					Set<Integer> mispos = getMisPos(sam);
+					for (int n : mispos) {
+						if (n >= sIn && n <= eIn) {
+							return true;
+						}
+					}
+					//
+					return false;
+				} catch (Exception ex) {
+					ex.printStackTrace();
+				}
+				//
+				//return true;
 			}
 		}
 		return false;
 	}
+
+	/*
+	 * Regexp for MD string.
+	 *
+	 * \G = end of previous match. (?:[0-9]+) non-capturing (why non-capturing?)
+	 * group of digits. For this number of bases read matches reference. - or -
+	 * Single reference base for case in which reference differs from read. - or
+	 * - ^one or more reference bases that are deleted in read.
+	 *
+	 */
+	static final Pattern mdPat = Pattern.compile("\\G(?:([0-9]+)|([ACTGNactgn])|(\\^[ACTGNactgn]+))");
+
+	/**
+	 * from picard code Produce reference bases from an aligned SAMRecord with
+	 * MD string and Cigar.
+	 * 
+	 * @param rec
+	 *            Must contain non-empty CIGAR and MD attribute.
+	 * @param includeReferenceBasesForDeletions
+	 *            If true, include reference bases that are deleted in the read.
+	 *            This will make the returned array not line up with the read if
+	 *            there are deletions.
+	 * @return References bases corresponding to the read. If there is an
+	 *         insertion in the read, reference contains '-'. If the read is
+	 *         soft-clipped, reference contains '0'. If there is a skipped
+	 *         region and includeReferenceBasesForDeletions==true, reference
+	 *         will have Ns for the skipped region.
+	 */
+	public static Set<Integer> getMisPos(final SAMRecord rec) {
+
+		Set<Integer> mispos = new HashSet<Integer>();
+		int start = rec.getAlignmentStart();
+		boolean includeReferenceBasesForDeletions = false;
+		final String md = rec.getStringAttribute(SAMTag.MD.name());
+		if (md == null) {
+			throw new SAMException("Cannot create reference from SAMRecord with no MD tag, read: " + rec.getReadName());
+		}
+		// Not sure how long output will be, but it will be no longer than this.
+		int maxOutputLength = 0;
+		final Cigar cigar = rec.getCigar();
+		if (cigar == null) {
+			throw new SAMException("Cannot create reference from SAMRecord with no CIGAR, read: " + rec.getReadName());
+		}
+		for (final CigarElement cigarElement : cigar.getCigarElements()) {
+			maxOutputLength += cigarElement.getLength();
+		}
+		final byte[] ret = new byte[maxOutputLength];
+		int outIndex = 0;
+
+		Matcher match = mdPat.matcher(md);
+		int curSeqPos = 0;
+
+		int savedBases = 0;
+		final byte[] seq = rec.getReadBases();
+		for (final CigarElement cigEl : cigar.getCigarElements()) {
+			int cigElLen = cigEl.getLength();
+			CigarOperator cigElOp = cigEl.getOperator();
+
+			if (cigElOp == CigarOperator.SKIPPED_REGION) {
+
+			}
+			// If it consumes reference bases, it's either a match or a deletion
+			// in the sequence
+			// read. Either way, we're going to need to parse through the MD.
+			else if (cigElOp.consumesReferenceBases()) {
+				// We have a match region, go through the MD
+				int basesMatched = 0;
+
+				// Do we have any saved matched bases?
+				while ((savedBases > 0) && (basesMatched < cigElLen)) {
+					ret[outIndex++] = seq[curSeqPos++];
+					savedBases--;
+					basesMatched++;
+				}
+
+				while (basesMatched < cigElLen) {
+					boolean matched = match.find();
+					if (matched) {
+						String mg;
+						if (((mg = match.group(1)) != null) && (mg.length() > 0)) {
+							// It's a number , meaning a series of matches
+							int num = Integer.parseInt(mg);
+							for (int i = 0; i < num; i++) {
+								if (basesMatched < cigElLen) {
+									ret[outIndex++] = seq[curSeqPos++];
+								} else {
+									savedBases++;
+								}
+								basesMatched++;
+							}
+						}
+
+						else if (((mg = match.group(2)) != null) && (mg.length() > 0)) {
+							// It's a single nucleotide, meaning a mismatch
+							if (basesMatched < cigElLen) {
+								ret[outIndex++] = StringUtil.charToByte(mg.charAt(0));
+								curSeqPos++;
+								mispos.add((start + outIndex));
+
+							} else {
+								// throw new IllegalStateException("Should never
+								// happen.");
+							}
+							basesMatched++;
+						} else if (((mg = match.group(3)) != null) && (mg.length() > 0)) {
+							// It's a deletion, starting with a caret
+							// don't include caret
+							if (includeReferenceBasesForDeletions) {
+								final byte[] deletedBases = StringUtil.stringToBytes(mg);
+								System.arraycopy(deletedBases, 1, ret, outIndex, deletedBases.length - 1);
+								outIndex += deletedBases.length - 1;
+							}
+							basesMatched += mg.length() - 1;
+
+							// Check just to make sure.
+							if (basesMatched != cigElLen) {
+								// throw new SAMException("Got a deletion in
+								// CIGAR (" + cigar + ", deletion " + cigElLen +
+								// " length) with an unequal ref insertion in MD
+								// (" + md + ", md " + basesMatched + "
+								// length");
+							}
+							if (cigElOp != CigarOperator.DELETION) {
+								// throw new SAMException ("Got an insertion in
+								// MD ("+md+") without a corresponding deletion
+								// in cigar ("+cigar+")");
+							}
+
+						} else {
+							matched = false;
+						}
+					}
+
+					if (!matched) {
+						// throw new SAMException("Illegal MD pattern: " + md +
+						// " for read " + rec.getReadName() +
+						// " with CIGAR " + rec.getCigarString());
+					}
+				}
+
+			} else if (cigElOp.consumesReadBases()) {
+				// We have an insertion in read
+				for (int i = 0; i < cigElLen; i++) {
+					char c = (cigElOp == CigarOperator.SOFT_CLIP) ? '0' : '-';
+					ret[outIndex++] = StringUtil.charToByte(c);
+					curSeqPos++;
+				}
+			} else {
+				// It's an op that consumes neither read nor reference bases. Do
+				// we just ignore??
+			}
+
+		}
+		return mispos;
+
+		// if (outIndex < ret.length) {
+		// byte[] shorter = new byte[outIndex];
+		// System.arraycopy(ret, 0, shorter, 0, outIndex);
+		// //return shorter;
+		// }
+		// return ret;
+	}
+	////
 
 	private Integer indelpos(SAMRecord sam) {
 
@@ -682,8 +920,7 @@ public class Realignment extends ReadWriteBase {
 
 	}
 
-	public static Option getOption(String opt, String longOpt, boolean hasArg,
-			String description, boolean required) {
+	public static Option getOption(String opt, String longOpt, boolean hasArg, String description, boolean required) {
 		Option option = new Option(opt, longOpt, hasArg, description);
 		option.setRequired(required);
 		return option;
@@ -692,22 +929,16 @@ public class Realignment extends ReadWriteBase {
 	private static List<Option> getOptionListForKarkinos() {
 
 		List<Option> optionlist = new ArrayList<Option>();
-		optionlist.add(getOption("n", "normalBam", true, "normal bam file",
-				true));
-		optionlist
-				.add(getOption("t", "tumorBam", true, "tumor bam file", true));
+		optionlist.add(getOption("n", "normalBam", true, "normal bam file", true));
+		optionlist.add(getOption("t", "tumorBam", true, "tumor bam file", true));
 
-		optionlist.add(getOption("r", "reference", true,
-				"2 bit genome reference file", true));
+		optionlist.add(getOption("r", "reference", true, "2 bit genome reference file", true));
 
-		optionlist
-				.add(getOption("o", "outdir", true, "output directory", true));
+		optionlist.add(getOption("o", "outdir", true, "output directory", true));
 
-		optionlist.add(getOption("ct", "captureTarget", true,
-				"Capture target regions(bed format)", false));
+		optionlist.add(getOption("ct", "captureTarget", true, "Capture target regions(bed format)", false));
 
-		optionlist.add(getOption("nt", "num threads", true, "number of threads",
-				false));
+		optionlist.add(getOption("nt", "num threads", true, "number of threads", false));
 
 		return optionlist;
 
