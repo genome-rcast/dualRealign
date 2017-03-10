@@ -1,9 +1,11 @@
+[![Build Status](https://travis-ci.org/genome-rcast/dualRealign.svg?branch=master)](https://travis-ci.org/genome-rcast/dualRealign)
+
 # About
 
 Realign Tumor/Normal Bam files  simultaneously.
 
 dualRealign is a post alignment re-aligner useing SRMA (https://sourceforge.net/projects/srma/).
-Especially, could be used for Tumor/Normal set of BAM files.   
+Especially, could be used for Tumor/Normal set of BAM files.
 
 # Licence
 
@@ -13,7 +15,7 @@ Especially, could be used for Tumor/Normal set of BAM files.
 # Install
 
 - Download dualRealign.jar from web sites.
-- Install Java Runtime 1.5 or later.
+- Install Java Runtime 1.8 or later.
 
 # Required files
 
@@ -30,10 +32,11 @@ Especially, could be used for Tumor/Normal set of BAM files.
 command
 
 usage: dualRealign.jar realign -n <arg> -t <arg> -r <arg> -o <arg> [-ct <arg>]  [-nt <arg>]
- 
+
  -n,--normalBam <arg>        normal bam file
  -t,--tumorBam <arg>         tumor bam file
  -r,--reference <arg>        2 bit genome reference file
  -o,--outdir <arg>           output directory
  -ct,--captureTarget <arg>   Capture target regions(bed format)
  -nt,--num threads <arg>     number of threads
+```
