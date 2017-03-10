@@ -43,7 +43,7 @@ task uberjar(type: Jar) {
   manifest {
     attributes 'Implementation-Title': project.name
     attributes 'Implementation-Version': project.version
-    attributes 'Main-Class': 'CmdMain'
+    attributes 'Main-Class': 'jp.ac.utokyo.rcast.CmdMain'
   }
   exclude "META-INF/*.RSA"
   exclude "META-INF/*.DSA"

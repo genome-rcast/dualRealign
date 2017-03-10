@@ -1,4 +1,5 @@
-package jp.ac.utokyo.rcast.realignimpl;
+package jp.ac.utokyo.rcast;
+
 /*
  * Copyright Hiroki Ueda
 
