@@ -1,3 +1,4 @@
+package srma.test;
 /*
  * Copyright Hiroki Ueda
  *
@@ -14,8 +15,6 @@
  * limitations under the License.
  */
 
-
-package srma.test;
 
 import java.util.ArrayList;
 import java.util.List;
