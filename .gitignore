@@ -5,6 +5,7 @@
 /checkouts
 /build
 *.jar
+!dependencies/*.jar
 *.class
 .DS_Store
 .gradle
@@ -28,3 +29,4 @@
 /subprojects/*/out
 .svn
 /bin/
+*.capregion
