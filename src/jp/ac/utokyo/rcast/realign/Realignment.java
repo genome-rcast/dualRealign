@@ -647,6 +647,10 @@ public class Realignment extends ReadWriteBase {
 				Indel idel = indelpos.get(f);
 				int sIn = idel.pos;
 				int eIn = idel.pos + idel.len;
+				if(idel.insersion){
+					sIn = idel.pos - idel.len;
+				}
+				
 				//
 				try {
 					Set<Integer> mispos = getMisPos(sam);
