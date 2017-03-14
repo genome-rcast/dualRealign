@@ -53,7 +53,7 @@ public class TestRealgin {
 	
 		add(l,"-o",outdir);
 		
-		add(l,"-nt","8");
+		add(l,"-nt","4");
 		
 				
 		

@@ -341,7 +341,7 @@ public class Realignment extends ReadWriteBase {
 
 		Set<Integer> single = new HashSet<Integer>();
 		int cnt = 0;
-		double frequencythres = 0.02;
+		double frequencythres = 0.03;
 		for (Entry<Integer, Indel> et : indelpos.entrySet()) {
 
 			if (et.getValue().getCount() >= 5000) {
