@@ -162,9 +162,9 @@ public class Realignment extends ReadWriteBase {
 			if (usualchrom) {
 
 				// debug
-				//if (!chrom.equals("chr17")) {
-				//	continue;
-				//}
+				// if (!chrom.equals("chr17")) {
+				// continue;
+				// }
 
 				realignChrom(chrom, normalbamr, normalbamw, tumorbamr, tumorbamw, tgr, dataset, numthread, normalbamr2,
 						tumorbamr2);
@@ -200,9 +200,12 @@ public class Realignment extends ReadWriteBase {
 		TreeMap<Integer, Indel> indelpos = new TreeMap<Integer, Indel>();
 		int startR = 0;
 		int endR = 0;
+		
+		int start = Integer.MAX_VALUE;
+		int end = 0;
 
-		//startR = 7675894;
-		//endR = 7676762;
+		// startR = 7675894;
+		// endR = 7676762;
 
 		// stats indel pos
 		System.out.println("stat indel pos " + chrom);
@@ -211,6 +214,16 @@ public class Realignment extends ReadWriteBase {
 		while (iteN.hasNext()) {
 
 			SAMRecord sam = iteN.next();
+			if(!sam.getReadUnmappedFlag()){
+				if(sam.getAlignmentStart()<start){
+					start = sam.getAlignmentStart();
+				}
+				if(sam.getAlignmentEnd()>end){
+					end = sam.getAlignmentEnd();
+				}
+			}
+			
+			
 			if (contatinIndel(sam)) {
 				int ip = indelpos(sam);
 
@@ -221,11 +234,12 @@ public class Realignment extends ReadWriteBase {
 
 							// indelpos.put(ip, indelpos.get(ip) + 1);
 							Indel indel = indelpos.get(ip);
-							indel.inc();
+							indel.inc(true);
 
 						} else {
 
 							Indel indel = new Indel(sam);
+							indel.inc(true);
 							indelpos.put(ip, indel);
 						}
 
@@ -236,11 +250,12 @@ public class Realignment extends ReadWriteBase {
 
 						// indelpos.put(ip, indelpos.get(ip) + 1);
 						Indel indel = indelpos.get(ip);
-						indel.inc();
+						indel.inc(true);
 
 					} else {
 
 						Indel indel = new Indel(sam);
+						indel.inc(true);
 						indelpos.put(ip, indel);
 					}
 
@@ -254,6 +269,15 @@ public class Realignment extends ReadWriteBase {
 		while (iteT.hasNext()) {
 
 			SAMRecord sam = iteT.next();
+			if(!sam.getReadUnmappedFlag()){
+				if(sam.getAlignmentStart()<start){
+					start = sam.getAlignmentStart();
+				}
+				if(sam.getAlignmentEnd()>end){
+					end = sam.getAlignmentEnd();
+				}
+			}
+			
 			if (contatinIndel(sam)) {
 				int ip = indelpos(sam);
 
@@ -264,11 +288,12 @@ public class Realignment extends ReadWriteBase {
 
 							// indelpos.put(ip, indelpos.get(ip) + 1);
 							Indel indel = indelpos.get(ip);
-							indel.inc();
+							indel.inc(false);
 
 						} else {
 
 							Indel indel = new Indel(sam);
+							indel.inc(false);
 							indelpos.put(ip, indel);
 						}
 
@@ -279,11 +304,12 @@ public class Realignment extends ReadWriteBase {
 
 						// indelpos.put(ip, indelpos.get(ip) + 1);
 						Indel indel = indelpos.get(ip);
-						indel.inc();
+						indel.inc(false);
 
 					} else {
 
 						Indel indel = new Indel(sam);
+						indel.inc(false);
 						indelpos.put(ip, indel);
 					}
 
@@ -311,7 +337,10 @@ public class Realignment extends ReadWriteBase {
 		}
 
 		List<SAMRecord> normal = new ArrayList<SAMRecord>();
+		List<SAMRecord> normal_realgin = new ArrayList<SAMRecord>();
+
 		List<SAMRecord> tumor = new ArrayList<SAMRecord>();
+		List<SAMRecord> tumor_realign = new ArrayList<SAMRecord>();
 		//
 		List<SAMRecord> realgin = new ArrayList<SAMRecord>();
 
@@ -339,10 +368,18 @@ public class Realignment extends ReadWriteBase {
 
 			}
 
-			if (((nm > 0) && (contatinIndel(sam) || nearIndel(sam, indelpos)))) {
+			Indel idel = null;
+			if (((nm > 0) && (contatinIndel(sam) || (idel =getIndel(sam, indelpos))!=null))) {
 
 				sam.setAttribute("YY", FlgNormal);
-				realgin.add(sam);
+				if (idel != null && idel.observedBoth()) {
+
+					normal_realgin.add(sam);
+
+				} else {
+					
+					realgin.add(sam);
+				}
 
 			} else {
 
@@ -375,10 +412,20 @@ public class Realignment extends ReadWriteBase {
 			}
 
 			int nm = getNM(sam);
-			if (((nm > 0) && (contatinIndel(sam) || nearIndel(sam, indelpos)))) {
+
+			Indel idel = null;
+			if (((nm > 0) && (contatinIndel(sam) || (idel =getIndel(sam, indelpos))!=null))) {
 
 				sam.setAttribute("YY", FlgTumor);
-				realgin.add(sam);
+				if (idel != null && idel.observedBoth()) {
+
+					tumor_realign.add(sam);
+
+				} else {
+					
+					realgin.add(sam);
+
+				}
 
 			} else {
 
@@ -393,13 +440,15 @@ public class Realignment extends ReadWriteBase {
 
 			System.out.println("normal not to realgin " + normal.size());
 			System.out.println("tumor not to realgin " + tumor.size());
+			System.out.println("realign normal" + normal_realgin.size());
+			System.out.println("realign tumor" + tumor_realign.size());
+			System.out.println("realign normal with tumor" + tumor.size());
 
 			System.out.println("sort reads for realgin " + chrom);
 			// sort realgin
 			Collections.sort(realgin, new SAMRecordCoordinateComparator());
 
-			int start = realgin.get(0).getAlignmentStart();
-			int end = realgin.get(realgin.size() - 1).getAlignmentEnd();
+		
 
 			//
 
@@ -409,47 +458,20 @@ public class Realignment extends ReadWriteBase {
 
 			ReferenceSequence res = tbrs.getSequence(chrom, start, end);
 
-			// realgin
+			// realgin dual re
 			// ////////////////////////////////////
-
-			// sep list
-			List<List<SAMRecord>> sep = sep(realgin);
-			List<List<SAMRecord>> ret = new ArrayList<List<SAMRecord>>();
-			ExecutorService exec = Executors.newFixedThreadPool(numthread);
-
-			try {
-
-				for (List<SAMRecord> list : sep) {
-
-					Runtask task = new Runtask(list, ret, normalbamr.getFileHeader(), res, tbrs, chrom, start, end);
-
-					exec.execute(task);
-
-				}
-
-			} finally {
-				exec.shutdown();
-				exec.awaitTermination(5, TimeUnit.HOURS);
-			}
-
-			System.out.println("realign by SRMA finish " + chrom);
-
-			// ///////////////////////////////////
-			//
-			for (List<SAMRecord> rlist : ret) {
-				// add to each
-				for (SAMRecord sam : rlist) {
-
-					int flg = sam.getIntegerAttribute("YY");
-					if (flg == FlgNormal) {
-						normal.add(sam);
-					} else {
-						tumor.add(sam);
-					}
-
-				}
-			}
-
+			realgin(chrom, normalbamr, numthread, normal, tumor, realgin, start, end, tbrs, res);
+			
+			// realgin dual re
+			// ////////////////////////////////////
+			realgin(chrom, normalbamr, numthread, normal, tumor, normal_realgin, start, end, tbrs, res);
+			
+			// realgin dual re
+			// ////////////////////////////////////
+			realgin(chrom, normalbamr, numthread, normal, tumor, tumor_realign, start, end, tbrs, res);
+			
+			
+			
 			System.out.println("sort normal " + chrom);
 			// sort normal
 			Collections.sort(normal, new SAMRecordCoordinateComparator());
@@ -473,6 +495,48 @@ public class Realignment extends ReadWriteBase {
 
 		}
 
+	}
+
+	private void realgin(String chrom, SAMFileReader normalbamr, int numthread, List<SAMRecord> normal,
+			List<SAMRecord> tumor, List<SAMRecord> realgin, int start, int end, TwobitReferenceSequence tbrs,
+			ReferenceSequence res) throws InterruptedException {
+		// sep list
+		List<List<SAMRecord>> sep = sep(realgin);
+		List<List<SAMRecord>> ret = new ArrayList<List<SAMRecord>>();
+		ExecutorService exec = Executors.newFixedThreadPool(numthread);
+
+		try {
+
+			for (List<SAMRecord> list : sep) {
+
+				Runtask task = new Runtask(list, ret, normalbamr.getFileHeader(), res, tbrs, chrom, start, end);
+
+				exec.execute(task);
+
+			}
+
+		} finally {
+			exec.shutdown();
+			exec.awaitTermination(5, TimeUnit.HOURS);
+		}
+
+		System.out.println("realign by SRMA finish " + chrom);
+
+		// ///////////////////////////////////
+		//
+		for (List<SAMRecord> rlist : ret) {
+			// add to each
+			for (SAMRecord sam : rlist) {
+
+				int flg = sam.getIntegerAttribute("YY");
+				if (flg == FlgNormal) {
+					normal.add(sam);
+				} else {
+					tumor.add(sam);
+				}
+
+			}
+		}
 	}
 
 	private boolean enoughDepth(SAMRecord sam, TreeMap<Integer, Indel> indelpos) {
@@ -620,18 +684,7 @@ public class Realignment extends ReadWriteBase {
 		return l;
 	}
 
-	private boolean nearIndel(SAMRecord sam, TreeMap<Integer, Indel> indelpos) {
-
-		 String readname2 = "HWI-D00677:85:CA2PBANXX:7:1115:18706:42919";
-		 if(sam.getReadName().equals(readname2)){
-			 
-			 System.out.println("debug2 realgin");
-			 System.out.println("before="+sam.getAlignmentStart() +" "+
-			 sam.getCigarString());
-		
-		 }
-		
-		
+	private Indel getIndel(SAMRecord sam, TreeMap<Integer, Indel> indelpos) {
 
 		int s = sam.getAlignmentStart();
 		int e = sam.getAlignmentEnd();
@@ -647,10 +700,79 @@ public class Realignment extends ReadWriteBase {
 				Indel idel = indelpos.get(f);
 				int sIn = idel.pos;
 				int eIn = idel.pos + idel.len;
-				if(idel.insersion){
+				if (idel.insersion) {
 					sIn = idel.pos - idel.len;
 				}
-				
+
+				//
+				try {
+					Set<Integer> mispos = getMisPos(sam);
+					for (int n : mispos) {
+						if (n >= sIn && n <= eIn) {
+							return idel;
+						}
+					}
+					//
+					// return true;
+				} catch (Exception ex) {
+					ex.printStackTrace();
+				}
+			}
+		}
+		if (c != null) {
+			if (Math.abs(c - e) < readlen) {
+
+				Indel idel = indelpos.get(c);
+				int sIn = idel.pos;
+				int eIn = idel.pos + idel.len;
+				try {
+					Set<Integer> mispos = getMisPos(sam);
+					for (int n : mispos) {
+						if (n >= sIn && n <= eIn) {
+							return idel;
+						}
+					}
+					//
+					return null;
+				} catch (Exception ex) {
+					ex.printStackTrace();
+				}
+				//
+				// return true;
+			}
+		}
+		return null;
+
+	}
+
+	private boolean nearIndel(SAMRecord sam, TreeMap<Integer, Indel> indelpos) {
+
+		String readname2 = "HWI-D00677:85:CA2PBANXX:7:1115:18706:42919";
+		if (sam.getReadName().equals(readname2)) {
+
+			System.out.println("debug2 realgin");
+			System.out.println("before=" + sam.getAlignmentStart() + " " + sam.getCigarString());
+
+		}
+
+		int s = sam.getAlignmentStart();
+		int e = sam.getAlignmentEnd();
+		//
+		int readlen = sam.getReadLength();
+
+		Integer c = indelpos.ceilingKey(s);
+		Integer f = indelpos.floorKey(e);
+
+		if (f != null) {
+			if (Math.abs(s - f) < readlen) {
+
+				Indel idel = indelpos.get(f);
+				int sIn = idel.pos;
+				int eIn = idel.pos + idel.len;
+				if (idel.insersion) {
+					sIn = idel.pos - idel.len;
+				}
+
 				//
 				try {
 					Set<Integer> mispos = getMisPos(sam);
@@ -660,7 +782,7 @@ public class Realignment extends ReadWriteBase {
 						}
 					}
 					//
-					//return true;
+					// return true;
 				} catch (Exception ex) {
 					ex.printStackTrace();
 				}
@@ -685,7 +807,7 @@ public class Realignment extends ReadWriteBase {
 					ex.printStackTrace();
 				}
 				//
-				//return true;
+				// return true;
 			}
 		}
 		return false;
