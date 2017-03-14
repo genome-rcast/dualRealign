@@ -19,53 +19,34 @@ package jp.ac.utokyo.rcast;
  */
 
 
+import java.io.File;
 import java.io.IOException;
-
+import java.util.Optional;
 import jp.ac.utokyo.rcast.realign.Realignment;
+import org.apache.commons.lang3.ArrayUtils;
 
 public class CmdMain {
+  public static void main(final String[] args) throws IOException, InterruptedException {
+    if (args == null || args.length == 0 || args[0] == null) {
+      printMessage();
+      return;
+    }
 
-	
-	public static final String version = "dualAlign version 0.1.0 2017/03/06";
-	
-	public static void main(String[] arg) throws Exception {
+    switch (args[0]) {
+      case "realign":
+        Realignment.main(ArrayUtils.subarray(args, 1, args.length));
+        break;
+      default:
+        printMessage();
+        break;
+    }
+  }
 
-		//
-		// arg = new String[]{"analysis"};
-		if (arg == null || arg.length == 0) {
-			printMsg();
-		} else {
-
-			String cmd = arg[0];
-			String[] arg2 = getArg(arg);
-			if (cmd.equals("realign")) {
-
-				Realignment.main(arg2);	
-				
-			}else{
-
-				printMsg();
-			}
-
-		}
-
-	}
-
-	private static String[] getArg(String[] arg) {
-		String[] arg2 = new String[arg.length - 1];
-		for (int n = 1; n < arg.length; n++) {
-			arg2[n - 1] = arg[n];
-			// System.out.println(arg[n]);
-		}
-		return arg2;
-	}
-
-	private static void printMsg() {
-		System.out.println(version);
-		System.out.println("usage: dualAlign.jar  realign <command> options");
-				
-		
-
-	}
-
+  private static void printMessage() {
+    final Optional<String> version = Optional.ofNullable(CmdMain.class.getPackage().getImplementationVersion());
+    final Optional<String> title = Optional.ofNullable(CmdMain.class.getPackage().getImplementationTitle());
+    final String jar = new File(CmdMain.class.getProtectionDomain().getCodeSource().getLocation().toString()).getName();
+    System.err.println(title.flatMap(t->version.map(v->t+" version "+v)).orElse("dualRealign"));
+    System.err.println("usage: java -jar " + jar + " {realign} <command> options");
+  }
 }

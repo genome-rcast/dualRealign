@@ -44,20 +44,20 @@ public class CmdTestRealign {
   @Test
   public void testRealign() throws Exception {
     // Arguments
-    final Path tmpdir = Files.createTempDirectory("dualRealign");
+    final String tmpdir = Files.createTempDirectory("dualRealign").toAbsolutePath().toString();
     assertNotNull(tmpdir);
 
     // Execute
-    final String[] argv = {"-n", normal, "-t", tumor, "-r", ref, "-ct", target, "-o", tmpdir.toString(), "-nt", "1"};
+    final String[] argv = {"-n", normal, "-t", tumor, "-r", ref, "-ct", target, "-o", tmpdir, "-nt", "1"};
     Realignment.main(argv);
 
     // Checks
-    final File n_result = Paths.get(tmpdir.toString(), "normal.bam_realign.bam").toFile();
-    final File t_result = Paths.get(tmpdir.toString(), "tumor.bam_realign.bam").toFile();
+    final File n_result = Paths.get(tmpdir, "normal.bam_realign.bam").toFile();
+    final File t_result = Paths.get(tmpdir, "tumor.bam_realign.bam").toFile();
     assertTrue(n_result.exists());
     assertTrue(t_result.exists());
-    assertTrue(Paths.get(tmpdir.toString(), "normal.bam_realign.bai").toFile().exists());
-    assertTrue(Paths.get(tmpdir.toString(), "tumor.bam_realign.bai").toFile().exists());
+    assertTrue(Paths.get(tmpdir, "normal.bam_realign.bai").toFile().exists());
+    assertTrue(Paths.get(tmpdir, "tumor.bam_realign.bai").toFile().exists());
 
     final SamReaderFactory srf = SamReaderFactory.makeDefault();
     try(final SamReader n = srf.open(n_result);
