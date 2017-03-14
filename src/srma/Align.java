@@ -875,7 +875,7 @@ public class Align {
 
 		
 		boolean sameExceptS = sameExceptS(cigar,rec.getCigar());
-		
+		boolean lessThan3Indel = lessthan3Indel(cigar); 		
 
 				
 		String readname2 = "HWI-D00677:85:CA2PBANXX:7:1115:18706:42919";
@@ -889,7 +889,7 @@ public class Align {
 		
 				
 		// ueda
-		if (nummatchAfter >= nummatchOrg && !sameExceptS ) {
+		if (nummatchAfter >= nummatchOrg && !sameExceptS &&lessThan3Indel) {
 			
 			if(!containIndel(rec.getCigar())&&containIndel(cigar)){
 			 System.out.println("before="+rec.getAlignmentStart() +" "+ rec.getCigarString());
@@ -914,6 +914,22 @@ public class Align {
 			rec.setAttribute("PG", programRecord.getId());
 			rec.setAttribute("NM", numEdits);
 		}
+	}
+
+	private static boolean lessthan3Indel(Cigar cigar) {
+		int indelcnt = 0;
+		for (CigarElement ce : cigar.getCigarElements()) {
+
+			if (ce.getOperator().equals(CigarOperator.D)) {
+				indelcnt++;
+			}
+			if (ce.getOperator().equals(CigarOperator.I)) {
+				indelcnt++;
+			}
+		
+			
+		}
+		return indelcnt<=3;
 	}
 
 	private static boolean containIndel(Cigar cigar) {
