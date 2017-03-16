@@ -1,3 +1,4 @@
+package jp.ac.utokyo.rcast.realignimpl;
 /*
  * Copyright Hiroki Ueda
 
@@ -18,9 +19,6 @@
 
 
 import java.io.IOException;
-
-
-import jp.ac.utokyo.rcast.realign.Realignment;
 
 public class CmdMain {
 

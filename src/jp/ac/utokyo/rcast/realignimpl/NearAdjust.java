@@ -17,7 +17,7 @@
  */
 
 
-package jp.ac.utokyo.rcast.realign;
+package jp.ac.utokyo.rcast.realignimpl;
 
 import java.io.File;
 import java.io.IOException;

@@ -20,7 +20,7 @@ package srma.test;
 import java.util.ArrayList;
 import java.util.List;
 
-import jp.ac.utokyo.rcast.realign.Realignment;
+import jp.ac.utokyo.rcast.realignimpl.Realignment;
 
 public class TestRealgin {
 	
