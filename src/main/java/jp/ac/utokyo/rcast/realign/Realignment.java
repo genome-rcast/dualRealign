@@ -1,4 +1,4 @@
-package jp.ac.utokyo.rcast.realignimpl;
+package jp.ac.utokyo.rcast.realign;
 
 import java.io.File;
 import java.io.IOException;

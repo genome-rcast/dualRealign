@@ -21,6 +21,8 @@ package jp.ac.utokyo.rcast;
 
 import java.io.IOException;
 
+import jp.ac.utokyo.rcast.realign.Realignment;
+
 public class CmdMain {
 
 	
