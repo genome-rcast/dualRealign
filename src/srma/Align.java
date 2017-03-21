@@ -889,7 +889,7 @@ public class Align {
 		
 				
 		// ueda
-		if (nummatchAfter >= nummatchOrg && !sameExceptS &&lessThan3Indel) {
+		if (nummatchAfter > nummatchOrg && !sameExceptS &&lessThan3Indel) {
 			
 			if(!containIndel(rec.getCigar())&&containIndel(cigar)){
 			 System.out.println("before="+rec.getAlignmentStart() +" "+ rec.getCigarString());
