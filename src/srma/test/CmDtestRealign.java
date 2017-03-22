@@ -22,7 +22,7 @@ import java.util.List;
 
 import jp.ac.utokyo.rcast.realignimpl.Realignment;
 
-public class TestRealgin {
+public class CmDtestRealign {
 	
 	
 
@@ -53,7 +53,7 @@ public class TestRealgin {
 	
 		add(l,"-o",outdir);
 		
-		add(l,"-nt","4");
+		add(l,"-nt","6");
 		
 				
 		
