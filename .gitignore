@@ -27,3 +27,4 @@
 /subprojects/*/*.iml
 /subprojects/*/out
 .svn
+/bin/

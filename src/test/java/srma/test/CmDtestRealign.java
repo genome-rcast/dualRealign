@@ -53,7 +53,7 @@ public class CmDtestRealign {
 	
 		add(l,"-o",outdir);
 		
-		add(l,"-nt","6");
+		add(l,"-nt","12");
 		
 				
 		
