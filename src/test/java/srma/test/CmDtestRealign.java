@@ -1,4 +1,3 @@
-package srma.test;
 /*
  * Copyright Hiroki Ueda
  *
@@ -16,12 +15,14 @@ package srma.test;
  */
 
 
+package srma.test;
+
 import java.util.ArrayList;
 import java.util.List;
 
 import jp.ac.utokyo.rcast.realign.Realignment;
 
-public class TestRealgin {
+public class CmDtestRealign {
 	
 	
 
@@ -52,7 +53,7 @@ public class TestRealgin {
 	
 		add(l,"-o",outdir);
 		
-		add(l,"-nt","4");
+		add(l,"-nt","6");
 		
 				
 		

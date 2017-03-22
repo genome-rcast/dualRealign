@@ -744,7 +744,7 @@ public class Realignment extends ReadWriteBase {
 				try {
 					Set<Integer> mispos = getMisPos(sam);
 					for (int n : mispos) {
-						if (n >= sIn && n <= eIn) {
+						if (n >= sIn && n <= eIn+1) {
 							return idel;
 						}
 					}
